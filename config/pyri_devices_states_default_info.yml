@@ -1,0 +1,19 @@
+device:
+  name: pyri_devices_states
+manufacturer:
+  name: PyRI_Project
+  uuid: 244389f3-35d5-4f9f-a244-c89649ce2a18
+model:
+  name: pyri_devices_states
+  uuid: 992020c4-181e-4790-8f2b-86d6e0c10766
+user_description: Service to provide state of all devices in system
+serial_number: 1
+device_classes:
+  - class_identifier:
+      name: devices_states
+      uuid: 6b3f64bc-0e16-44cb-b97f-77b39246ae07
+    subclasses:
+      - streaming
+implemented_types:
+  - com.robotraconteur.device.Device
+  - tech.pyri.devices_states.PyriDevicesStatesService

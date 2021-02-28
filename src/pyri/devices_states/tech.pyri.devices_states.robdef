@@ -1,0 +1,52 @@
+service tech.pyri.devices_states
+
+stdver 0.10
+
+import com.robotraconteur.datetime
+import com.robotraconteur.device
+import com.robotraconteur.identifier
+import com.robotraconteur.device.isoch
+import tech.pyri.device_manager
+
+using com.robotraconteur.datetime.DateTimeUTC
+using com.robotraconteur.device.Device
+using com.robotraconteur.device.DeviceInfo
+using com.robotraconteur.identifier.Identifier
+using com.robotraconteur.device.isoch.IsochDevice
+using com.robotraconteur.device.isoch.IsochInfo
+using tech.pyri.device_manager.PyriDeviceInfo
+
+struct PyriDeviceState
+    field string local_device_name
+    field Identifier device
+    field bool connected
+    field bool ready
+    field bool error    
+    field PyriDeviceStateTyped{list} state
+    field varvalue{string} extended
+end
+
+struct PyriDeviceStateTyped
+    field string type
+    field string{list} display_flags
+    field varvalue state_data
+end
+
+struct PyriDevicesStates
+    field PyriDeviceState devices_states
+end
+
+object PyriDevicesStatesService
+    implements Device
+
+    property DeviceInfo device_info [readonly,nolock]
+
+    function PyriDeviceInfo getf_device_info(string local_device_name)
+    function DeviceInfo getf_standard_device_info(string local_device_name)
+    function varvalue{string} getf_extended_device_info(string local_device_name)
+
+    wire PyriDevicesStates device_states
+
+    property IsochInfo isoch_info [readonly,nolock]
+    property uint32 isoch_downsample [perclient] 
+end
