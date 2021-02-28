@@ -6,7 +6,7 @@ import RobotRaconteur as RR
 class RRDevice_TypeAdapter(PyriDeviceTypeAdapter):
     """Adapter for com.robotraconteur.device.Device"""
 
-    def __init__(self, client_subscription):
+    def __init__(self, client_subscription, node):
         self._sub: "RobotRaconteur.ServiceSubscription" = client_subscription
 
     async def get_extended_device_infos(self, timeout) -> Dict[str,RR.VarValue]:
@@ -29,10 +29,10 @@ class PyriDeviceStatesTypeAdapterPluginFactory(PyriDeviceTypeAdapterPluginFactor
     def get_robotraconteur_types(self) -> List[str]:
         return ["com.robotraconteur.device.Device"]
 
-    def create_device_type_adapter(self, robotraconteur_type: str, client_subscription: Any) -> PyriDeviceTypeAdapter:
+    def create_device_type_adapter(self, robotraconteur_type: str, client_subscription: Any, node) -> PyriDeviceTypeAdapter:
 
         if robotraconteur_type == "com.robotraconteur.device.Device":
-            return RRDevice_TypeAdapter(client_subscription)
+            return RRDevice_TypeAdapter(client_subscription, node)
         assert False, "Invalid robotraconteur_type device type adapter requested"
 
 def get_device_type_adapter_factory():

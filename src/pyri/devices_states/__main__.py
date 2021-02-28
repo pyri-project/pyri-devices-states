@@ -30,12 +30,17 @@ def main():
     attributes_util = AttributesUtil(RRN)
     device_attributes = attributes_util.GetDefaultServiceAttributesFromDeviceInfo(device_info)
 
+    extra_imports = RRN.GetRegisteredServiceTypes()
+
     with RR.ServerNodeSetup("tech.pyri.devices_states",59905,argv=sys.argv):
 
         dev_states = PyriDevicesStatesService(args.device_manager_url, device_info=device_info, node = RRN) 
 
         service_ctx = RRN.RegisterService("devices_states","tech.pyri.devices_states.PyriDevicesStatesService",dev_states)
         service_ctx.SetServiceAttributes(device_attributes)
+
+        for e in extra_imports:
+            service_ctx.AddExtraImport(e)
 
         if args.wait_signal:  
             #Wait for shutdown signal if running in service mode          
@@ -49,7 +54,7 @@ def main():
             else:
                 raw_input("Server started, press enter to quit...")
 
-        dev_manager.close()
+        dev_states.close()
 
 if __name__ == "__main__":
     sys.exit(main() or 0)

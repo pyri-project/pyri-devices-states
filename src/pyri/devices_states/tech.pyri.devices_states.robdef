@@ -6,6 +6,8 @@ import com.robotraconteur.datetime
 import com.robotraconteur.device
 import com.robotraconteur.identifier
 import com.robotraconteur.device.isoch
+import com.robotraconteur.device.clock
+import com.robotraconteur.datetime
 import tech.pyri.device_manager
 
 using com.robotraconteur.datetime.DateTimeUTC
@@ -14,6 +16,9 @@ using com.robotraconteur.device.DeviceInfo
 using com.robotraconteur.identifier.Identifier
 using com.robotraconteur.device.isoch.IsochDevice
 using com.robotraconteur.device.isoch.IsochInfo
+using com.robotraconteur.device.clock.DeviceClock
+using com.robotraconteur.device.clock.DeviceTime
+using com.robotraconteur.datetime.TimeSpec3
 using tech.pyri.device_manager.PyriDeviceInfo
 
 struct PyriDeviceState
@@ -21,7 +26,8 @@ struct PyriDeviceState
     field Identifier device
     field bool connected
     field bool ready
-    field bool error    
+    field bool error
+    field uint32 info_seqno
     field PyriDeviceStateTyped{list} state
     field varvalue{string} extended
 end
@@ -33,11 +39,16 @@ struct PyriDeviceStateTyped
 end
 
 struct PyriDevicesStates
-    field PyriDeviceState devices_states
+    field TimeSpec3 ts
+    field uint64 seqno
+    field PyriDeviceState{string} devices_states
+    field varvalue{string} extended
 end
 
 object PyriDevicesStatesService
     implements Device
+    implements DeviceClock
+    implements IsochDevice
 
     property DeviceInfo device_info [readonly,nolock]
 
@@ -45,8 +56,9 @@ object PyriDevicesStatesService
     function DeviceInfo getf_standard_device_info(string local_device_name)
     function varvalue{string} getf_extended_device_info(string local_device_name)
 
-    wire PyriDevicesStates device_states
+    wire PyriDevicesStates devices_states [readonly]
 
     property IsochInfo isoch_info [readonly,nolock]
-    property uint32 isoch_downsample [perclient] 
+    property uint32 isoch_downsample [perclient]
+    wire DeviceTime device_clock_now [readonly,nolock]
 end
