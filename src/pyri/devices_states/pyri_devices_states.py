@@ -209,7 +209,7 @@ class PyriDevicesStatesActiveDevice:
         if not res:
             device_state.connected = False
             return device_state
-
+        device_state.connected = True
         ready =True
         error = False
 
