@@ -80,6 +80,7 @@ class PyriDevicesStatesService:
             #print("Timer callback!")
 
             if self._refresh_counter >= 50:
+                self._refresh_counter = 0
                 self._refresh_devices(0)
             else:
                 self._refresh_counter += 1

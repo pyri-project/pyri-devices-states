@@ -8,6 +8,8 @@ from RobotRaconteurCompanion.Util.InfoFileLoader import InfoFileLoader
 from RobotRaconteurCompanion.Util.AttributesUtil import AttributesUtil
 from pyri.plugins import robdef as robdef_plugins
 
+import asyncio
+
 
 def main():
 
@@ -41,6 +43,10 @@ def main():
 
         for e in extra_imports:
             service_ctx.AddExtraImport(e)
+
+        loop = asyncio.new_event_loop()
+        #asyncio.ensure_future(foo(loop))
+        loop.run_forever()
 
         if args.wait_signal:  
             #Wait for shutdown signal if running in service mode          
