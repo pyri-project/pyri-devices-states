@@ -47,11 +47,17 @@ class PyriDevicesStatesService:
     def _refresh_devices(self, timeout):
         self._device_manager.refresh_devices(timeout)
 
-        for d in self._device_manager.get_device_names():
+        active_devices = self._device_manager.get_device_names()
+
+        for d in active_devices:
             if d not in self._devices:                
                 sub = self._device_manager.get_device_subscription(d)
                 device_ident = self._device_manager.get_device_info(d).device
                 self._devices[d] = PyriDevicesStatesActiveDevice(d, device_ident, sub, self._node)
+
+        for d in list(self._devices.keys()):
+            if d not in active_devices:
+                del self._devices[d]
 
         for dev in self._devices.values():
             dev.refresh_types()
