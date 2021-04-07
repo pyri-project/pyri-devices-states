@@ -24,11 +24,7 @@ class PyriDevicesStatesService:
         self._device_not_found = self._node.GetExceptionType('tech.pyri.device_manager.DeviceNotFound')
 
         self._device_manager = DeviceManagerClient(device_manager_url)
-        self._device_manager.refresh_devices(1)
-
-        self._timer = self._node.CreateTimer(0.1, self._timer_cb)
-        self._timer.Start()
-
+        
         self._refresh_counter = 0
 
         self._devices = dict()
@@ -39,6 +35,9 @@ class PyriDevicesStatesService:
         self._isoch_info = self._node.GetStructureType('com.robotraconteur.device.isoch.IsochInfo')
 
         self._refresh_devices(1)
+
+        self._timer = self._node.CreateTimer(0.1, self._timer_cb)
+        self._timer.Start()
 
     def RRServiceObjectInit(self, ctx, service_path):
         self._downsampler = RR.BroadcastDownsampler(ctx)
