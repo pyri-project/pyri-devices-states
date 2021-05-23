@@ -12,7 +12,7 @@ import numpy as np
 
 class PyriDevicesStatesService:
 
-    def __init__(self, device_manager_url, device_info = None, node : RR.RobotRaconteurNode = None):
+    def __init__(self, device_manager, device_info = None, node : RR.RobotRaconteurNode = None):
         self._lock = threading.RLock()
         if node is None:
             self._node = RR.RobotRaconteurNode.s
@@ -23,7 +23,7 @@ class PyriDevicesStatesService:
         self._devices_states = self._node.GetStructureType('tech.pyri.devices_states.PyriDevicesStates')
         self._device_not_found = self._node.GetExceptionType('tech.pyri.device_manager.DeviceNotFound')
 
-        self._device_manager = DeviceManagerClient(device_manager_url)
+        self._device_manager = device_manager
         
         self._refresh_counter = 0
 
