@@ -26,11 +26,11 @@ def main():
         for e in extra_imports:
             service_ctx.AddExtraImport(e)
 
+
         loop = asyncio.new_event_loop()
         #asyncio.ensure_future(foo(loop))
+        service_node_setup.wait_exit_stop_loop(loop)
         loop.run_forever()
-
-        service_node_setup.wait_exit()
 
         dev_states.close()
 
