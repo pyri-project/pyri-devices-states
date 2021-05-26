@@ -2,7 +2,7 @@ from pyri.plugins.service_node_launch import ServiceNodeLaunch, PyriServiceNodeL
 
 
 launches = [
-    ServiceNodeLaunch("devices_states", "pyri.devices_states", "pyri.devices_states", default_devices=[("pyri_devices_states","sandbox")])
+    ServiceNodeLaunch("devices_states", "pyri.devices_states", "pyri.devices_states", default_devices=[("pyri_devices_states","devices_states")])
 ]
 
 class DevicesStatesLaunchFactory(PyriServiceNodeLaunchFactory):
