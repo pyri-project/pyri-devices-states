@@ -16,7 +16,8 @@ def main():
    
     with PyriServiceNodeSetup("tech.pyri.devices_states",59905, \
         display_description = "PyRI Devices States Service", register_plugin_robdef=True, \
-        default_info=(__package__,"pyri_devices_states_default_info.yml")) as service_node_setup:
+        default_info=(__package__,"pyri_devices_states_default_info.yml"),
+        distribution_name="pyri-devices-states") as service_node_setup:
 
         extra_imports = RRN.GetRegisteredServiceTypes()
 
