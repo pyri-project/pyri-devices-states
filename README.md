@@ -8,6 +8,8 @@ This package is part of the PyRI project. See https://github.com/pyri-project/py
 
 The `pyri-devices-states` package contains the devices states service, which collects, aggregates, and reports the states of the devices in the system.
 
+## Service
+
 This service is started automatically by `pyri-core`, and does not normally need to be started manually.
 
 Standalone service command line example:
