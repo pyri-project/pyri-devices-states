@@ -98,7 +98,7 @@ class PyriDevicesStatesService:
             await asyncio.sleep(1)
             while True:
                 await self._do_refresh_devices(0)
-                await asyncio.sleep(10)
+                await asyncio.sleep(1)
         except:
             traceback.print_exc()
             raise
