@@ -1,13 +1,15 @@
+from contextlib import suppress
 import RobotRaconteur as RR
 from RobotRaconteur.RobotRaconteurPythonUtil import SplitQualifiedName
 import threading
 from pyri.device_manager_client import DeviceManagerClient
 from pyri.plugins.device_type_adapter import get_device_type_adapter_plugin_factories
-from asgiref.sync import async_to_sync
 from RobotRaconteurCompanion.Util.DateTimeUtil import DateTimeUtil
 
 import traceback
 import numpy as np
+import asyncio
+import time
 
 
 class PyriDevicesStatesService:
@@ -34,32 +36,72 @@ class PyriDevicesStatesService:
         self._date_time_utc_type = self._node.GetPodDType('com.robotraconteur.datetime.DateTimeUTC')
         self._isoch_info = self._node.GetStructureType('com.robotraconteur.device.isoch.IsochInfo')
 
-        self._refresh_devices(1)
+        self._aio_thread = None
+        self._loop = None
 
-        self._timer = self._node.CreateTimer(0.1, self._timer_cb)
-        self._timer.Start()
+        self._start_aio_thread()
+        time.sleep(0.1)
+
+        self._start_refresh_devices()
+
+        self._refresh_devices_fut = None
+        self._send_devices_states_fut = None
 
     def RRServiceObjectInit(self, ctx, service_path):
         self._downsampler = RR.BroadcastDownsampler(ctx)
         self._downsampler.AddWireBroadcaster(self.devices_states)
 
-    def _refresh_devices(self, timeout):
-        self._device_manager.refresh_devices(timeout)
+        self._start_send_devices_states()
+
+    def _start_aio_thread(self):
+        self._aio_thread = threading.Thread(target=self._run_aio_thread)
+        self._aio_thread.daemon=True
+        self._aio_thread.start()
+
+    def _run_aio_thread(self):
+        self._loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self._loop)
+        self._loop.run_forever()
+
+    def _stop_aio_thread(self):
+        self._loop.close()
+
+    def _start_refresh_devices(self):
+        self.refresh_devices_fut = asyncio.run_coroutine_threadsafe(self._refresh_devices(), self._loop)
+
+    def _start_send_devices_states(self):
+        self._send_devices_states_fut = asyncio.run_coroutine_threadsafe(self._send_devices_states(), self._loop)
+
+    async def _do_refresh_devices(self, timeout):
+        await self._device_manager.async_refresh_devices(timeout)
 
         active_devices = self._device_manager.get_device_names()
 
-        for d in active_devices:
-            if d not in self._devices:                
-                sub = self._device_manager.get_device_subscription(d)
-                device_ident = self._device_manager.get_device_info(d).device
-                self._devices[d] = PyriDevicesStatesActiveDevice(d, device_ident, sub, self._node)
+        with self._lock:
+            for d in active_devices:
+                if d not in self._devices:                
+                    sub = self._device_manager.get_device_subscription(d)
+                    device_ident = self._device_manager.get_device_info(d).device
+                    self._devices[d] = PyriDevicesStatesActiveDevice(d, device_ident, sub, self._node)
 
-        for d in list(self._devices.keys()):
-            if d not in active_devices:
-                del self._devices[d]
+            for d in list(self._devices.keys()):
+                if d not in active_devices:
+                    del self._devices[d]
 
-        for dev in self._devices.values():
-            dev.refresh_types()
+            for dev in self._devices.values():
+                dev.refresh_types()
+
+    async def _refresh_devices(self):
+        
+        try:
+            await self._do_refresh_devices(1)
+            await asyncio.sleep(1)
+            while True:
+                await self._do_refresh_devices(0)
+                await asyncio.sleep(1)
+        except:
+            traceback.print_exc()
+            raise
 
     def getf_device_info(self, local_device_name):
 
@@ -77,39 +119,42 @@ class PyriDevicesStatesService:
         if dev is None:
             raise self._device_not_found(f"Unknown local_device_name: {local_device_name}")
 
-        return dev.get_extended_device_info(1)
+        return asyncio.run_coroutine_threadsafe(dev.get_extended_device_info(1),self._loop).result()
 
-    def _timer_cb(self,evt):
-        with self._lock:
-            self._seqno+=1
-            #print("Timer callback!")
+    async def _send_devices_states(self):
+        
+        while True:
+            
+            try:
+                with self._lock:
+                    self._seqno += 1
+                    devices = list(self._devices.values())
 
-            if self._refresh_counter >= 50:
-                self._refresh_counter = 0
-                self._refresh_devices(0)
-            else:
-                self._refresh_counter += 1
+                devices_states = dict()
+                for d in devices:
+                    devices_states[d.local_device_name] = await d.get_device_state()
 
-            devices_states = dict()
+                s = self._devices_states()
 
-            for d in self._devices.values():      
-                devices_states[d.local_device_name] = d.get_device_state()
+                s.ts = self._date_time_util.TimeSpec3Now()
+                s.seqno = self._seqno
+                s.devices_states = devices_states
+                self.devices_states.OutValue = s
+            except:
+                traceback.print_exc()
 
-            s = self._devices_states()
-
-            s.ts = self._date_time_util.TimeSpec3Now()
-            s.seqno = self._seqno
-            s.devices_states = devices_states
-
-            self.devices_states.OutValue = s
+            await asyncio.sleep(0.1)
 
             #print(self._seqno)
 
     def close(self):
-        try:
-            self._timer.Stop()
-        except:
-            pass
+
+        with suppress(Exception):
+            self._send_devices_states_fut.cancel()
+        with suppress(Exception):
+            self._refresh_devices_fut.cancel()
+        time.sleep(0.1)
+        self._loop.stop()
 
     @property
     def isoch_downsample(self):
@@ -192,7 +237,6 @@ class PyriDevicesStatesActiveDevice:
     def local_device_name(self):
         return self._local_device_name
 
-    @async_to_sync
     async def get_extended_device_info(self,timeout = 1):
         with self._lock:
             a = list(self._adapters.values())
@@ -204,7 +248,6 @@ class PyriDevicesStatesActiveDevice:
 
         return infos
 
-    @async_to_sync
     async def get_device_state(self):
         device_state = self._device_state()
 

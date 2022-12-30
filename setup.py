@@ -17,8 +17,7 @@ setup(
     install_requires=[
         'pyri-common',
         'pyri-device-manager',
-        'robotraconteur',
-        "asgiref"
+        'robotraconteur'
     ],
     tests_require=['pytest','pytest-asyncio'],
     extras_require={
