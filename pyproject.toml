@@ -1,0 +1,52 @@
+[project]
+
+name = "pyri-devices-states"
+version = "0.1.0"
+description = "PyRI Teach Pendant Devices States Service"
+readme = "README.md"
+requires-python = ">=3.8"
+license = {file = "LICENSE.txt"}
+keywords = ["pyodide", "pyri-project", "pyri-runtime-package", "robotics"]
+authors = [
+    {name = "John Wason", email = "wason@wasontech.com"}
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: Apache Software License",
+    "Topic :: Scientific/Engineering"
+]
+
+dependencies = [
+    'pyri-common',
+    'pyri-device-manager',
+    'robotraconteur'     
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest",
+    "pytest-asyncio"
+]
+
+[project.urls]
+homepage="http://pyri.tech"
+repository="https://github.com/pyri-project/pyri-devices-states"
+
+[project.scripts]
+pyri-devices-states-service = "pyri.devices_states.__main__:main"
+
+[project.entry-points."pyri.plugins.robdef"]
+pyri-devices-states-robdef= "pyri.devices_states.robdef:get_robdef_factory"
+
+[project.entry-points."pyri.plugins.service_node_launch"]
+pyri-devices-states-launch = "pyri.devices_states.service_node_launch:get_service_node_launch_factory"
+
+[project.entry-points."pyri.plugins.device_type_adapter"]
+pyri-device-states-type-adapter = "pyri.devices_states.device_type_adapter:get_device_type_adapter_factory"
+
+[build-system]
+build-backend = 'setuptools.build_meta'
+requires = [
+    'setuptools',
+    'toml',
+]
