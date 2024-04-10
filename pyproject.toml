@@ -1,7 +1,7 @@
 [project]
 
 name = "pyri-devices-states"
-version = "0.2.0"
+version = "0.3.0"
 description = "PyRI Teach Pendant Devices States Service"
 readme = "README.md"
 requires-python = ">=3.8"
@@ -19,7 +19,8 @@ classifiers = [
 dependencies = [
     'pyri-common',
     'pyri-device-manager',
-    'robotraconteur'     
+    'RobotRaconteur>=1.2.0',
+    'RobotRaconteurCompanion>=0.4.0',
 ]
 
 [project.optional-dependencies]
@@ -50,3 +51,6 @@ requires = [
     'setuptools',
     'toml',
 ]
+
+[tool.setuptools.package-data]
+"pyri.devices_states" = ["*.robdef","*.yml"]
